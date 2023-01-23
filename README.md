@@ -8,6 +8,6 @@ As we all know, KISS can't code. This leads to the many issues with the game onc
 To get technical, we optimize various calls by sorta juggling the slower parts of the code. You can credit @hatena_37 for portions of the code found in ModMenuAccel that indeed confer a speed boost. I ported that code to BepInEx and implemented it in a cleaner fashion into SSL. Apart from that, the biggest optimization is implementing parallelism for mod gathering. This can slough off various seconds or even minutes as the game identifies mod files while it loads itself.
 
 ## Installation ##
-1. Download file
+1. Download file from here: https://github.com/krypto5863/COM3D2.ShortStartLoader/releases under assets.
 2. Place into Bepinex/plugins
 3. Profit. You may configure it to disable features in the F1 menu or by editing the config file in the config directory.
