@@ -10,4 +10,5 @@ To get technical, we optimize various calls by sorta juggling the slower parts o
 ## Installation ##
 1. Download file from here: https://github.com/krypto5863/COM3D2.ShortStartLoader/releases under assets.
 2. Place into Bepinex/plugins
-3. Profit. You may configure it to disable features in the F1 menu or by editing the config file in the config directory.
+3. REMOVE `COM3D2.ModMenuAccel.Hook.dll` and `COM3D2.ModMenuAccel.Patcher.dll`, they are no longer needed!
+4. Profit. You may configure it to disable features in the F1 menu or by editing the config file in the config directory.
