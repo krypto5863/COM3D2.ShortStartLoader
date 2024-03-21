@@ -40,7 +40,7 @@ namespace ShortStartLoader
 
 			if (_legacyLoadTask.IsFaulted)
 			{
-				SslMain.PubLogger.LogFatal("The legacy loader thread encountered a fatal error!");
+				ShortStartLoader.PluginLogger.LogFatal("The legacy loader thread encountered a fatal error!");
 
 				if (_legacyLoadTask.Exception?.InnerException != null)
 				{
@@ -86,7 +86,7 @@ namespace ShortStartLoader
 
 			if (_modLoadTask.IsFaulted)
 			{
-				SslMain.PubLogger.LogFatal("The mod loader thread encountered a fatal error!");
+				ShortStartLoader.PluginLogger.LogFatal("The mod loader thread encountered a fatal error!");
 
 				if (_modLoadTask.Exception?.InnerException != null)
 				{
@@ -220,11 +220,11 @@ namespace ShortStartLoader
 				var stopWatchLoc = new Stopwatch();
 				stopWatchLoc.Start();
 
-				SslMain.PubLogger.LogInfo("■■■■■■■■ SSL's FileSystemOld Loading Thread has begun.");
+				ShortStartLoader.PluginLogger.LogInfo("■■■■■■■■ SSL's FileSystemOld Loading Thread has begun.");
 
 				GameUty.UpdateFileSystemPathOld();
 
-				SslMain.PubLogger.LogInfo($"■■■■■■■■ SSL's FileSystemOld Loading Thread has finished in {stopWatchLoc.Elapsed}");
+				ShortStartLoader.PluginLogger.LogInfo($"■■■■■■■■ SSL's FileSystemOld Loading Thread has finished in {stopWatchLoc.Elapsed}");
 			});
 
 			_modLoadTask = Task.Factory.StartNew(delegate
@@ -232,7 +232,7 @@ namespace ShortStartLoader
 				var stopwatch1 = new Stopwatch();
 				stopwatch1.Start();
 
-				SslMain.PubLogger.LogInfo("■■■■■■■■ SSL's Mod Loading Thread has begun...");
+				ShortStartLoader.PluginLogger.LogInfo("■■■■■■■■ SSL's Mod Loading Thread has begun...");
 
 				if (Directory.Exists(gamePath + "Mod"))
 				{
@@ -240,9 +240,10 @@ namespace ShortStartLoader
 					GameUty.m_ModFileSystem.SetBaseDirectory(gamePath);
 					GameUty.m_ModFileSystem.AddFolder("Mod");
 
-					var listOfDirsInModFolder = GameUty.m_ModFileSystem.GetList(string.Empty, AFileSystemBase.ListType.AllFolder);
+					var listOfDirsInModFolder =
+							GameUty.m_ModFileSystem.GetList(string.Empty, AFileSystemBase.ListType.AllFolder);
 
-					SslMain.PubLogger.LogDebug($"{listOfDirsInModFolder.Count()} have been found in the Mod Folder.");
+					ShortStartLoader.PluginLogger.LogDebug($"{listOfDirsInModFolder.Count()} have been found in the Mod Folder.");
 
 					//Supposedly it's useless since we're using AddFolder above. but maybe it isn't.
 					for (var c = 0; c < listOfDirsInModFolder.Length; c++)
@@ -253,17 +254,22 @@ namespace ShortStartLoader
 						}
 					}
 
-					if (SslMain.UseNewMethod.Value)
+					if (ShortStartLoader.UseNewMethod.Value)
 					{
 						GameUty.m_aryModOnlysMenuFiles = GameUty.m_ModFileSystem.GetFileListAtExtension(".menu");
 						for (var r = 0; r < GameUty.m_aryModOnlysMenuFiles.Length; r++)
 						{
+#if DEBUG
+							ShortStartLoader.PluginLogger.LogDebug($"Getting file name of {GameUty.m_aryModOnlysMenuFiles[r]}");
+#endif
 							GameUty.m_aryModOnlysMenuFiles[r] = Path.GetFileName(GameUty.m_aryModOnlysMenuFiles[r]);
 						}
 					}
 					else
 					{
-						var listOfMenusInModFolder = GameUty.m_ModFileSystem.GetList(string.Empty, AFileSystemBase.ListType.AllFile);
+						var listOfMenusInModFolder =
+								GameUty.m_ModFileSystem.GetList(string.Empty, AFileSystemBase.ListType.AllFile);
+
 						GameUty.m_aryModOnlysMenuFiles = listOfMenusInModFolder.Where(strFile => Regex.IsMatch(strFile, ".*\\.menu$")).ToArray();
 					}
 
@@ -274,7 +280,7 @@ namespace ShortStartLoader
 					}
 				}
 
-				SslMain.PubLogger.LogInfo($"■■■■■■■■ SSL's Mod Load Thread has finished @ {stopwatch1.Elapsed}");
+				ShortStartLoader.PluginLogger.LogInfo($"■■■■■■■■ SSL's Mod Load Thread has finished @ {stopwatch1.Elapsed}");
 			});
 
 			/* Informative, off for now.
@@ -512,6 +518,9 @@ namespace ShortStartLoader
 				{
 					foreach (var path in bgArcs)
 					{
+#if DEBUG
+						ShortStartLoader.PluginLogger.LogDebug($"Getting file name of {path}");
+#endif
 						var fileName = Path.GetFileName(path);
 						var flag27 = Path.GetExtension(fileName) == ".asset_bg" && !GameUty.BgFiles.ContainsKey(fileName);
 						if (flag27)
@@ -529,6 +538,9 @@ namespace ShortStartLoader
 					{
 						foreach (var arcPath in bgArcs)
 						{
+#if DEBUG
+							ShortStartLoader.PluginLogger.LogDebug($"Getting file name of {arcPath}");
+#endif
 							var file = Path.GetFileName(arcPath);
 							if (!Path.GetExtension(file).Equals(".asset_language"))
 							{
@@ -556,7 +568,7 @@ namespace ShortStartLoader
 				}
 			}
 
-			Debug.Log($"■■■■■■■■ Done @ {stopwatch.Elapsed}");
+			ShortStartLoader.PluginLogger.LogInfo($"\n■■■■■■■■ Done @ {stopwatch.Elapsed}");
 
 			//UnityEngine.Debug.Log("■■■■■■■■ Done!");
 
@@ -579,7 +591,7 @@ namespace ShortStartLoader
 
 			stopwatch.Start();
 
-			Debug.Log("■■■■■■■■ Archive Log[Legacy]");
+			ShortStartLoader.PluginLogger.LogInfo("■■■■■■■■ Archive Log[Legacy]");
 
 			bool AddFolderOrArchive(string name)
 			{
@@ -681,6 +693,9 @@ namespace ShortStartLoader
 
 				foreach (var path in bgFiles)
 				{
+#if DEBUG
+					ShortStartLoader.PluginLogger.LogDebug($"Getting file name of {path}");
+#endif
 					var fileName = Path.GetFileName(path);
 					if (Path.GetExtension(fileName) == ".asset_bg" && !GameUty.BgFiles.ContainsKey(fileName))
 					{
@@ -689,7 +704,7 @@ namespace ShortStartLoader
 				}
 			}
 
-			Debug.Log($"■■■■■■■■ Done Loading Legacy Files @ {stopwatch.Elapsed}");
+			ShortStartLoader.PluginLogger.LogInfo($"■■■■■■■■ Done Loading Legacy Files @ {stopwatch.Elapsed}");
 			stopwatch.Stop();
 
 			return false;

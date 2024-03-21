@@ -10,33 +10,40 @@ using System.Security.Permissions;
 
 namespace ShortStartLoader
 {
-	[BepInPlugin("ShortStartLoader", "ShortStartLoader", "1.2")]
+	[BepInPlugin("ShortStartLoader", "ShortStartLoader", "1.3.2")]
 	[BepInDependency("BepInEx.SybarisLoader.Patcher", BepInDependency.DependencyFlags.SoftDependency)]
-	public class SslMain : BaseUnityPlugin
+	public class ShortStartLoader : BaseUnityPlugin
 	{
-		public static ManualLogSource PubLogger;
-		public static ConfigEntry<bool> UseNewMethod;
-		public static ConfigEntry<bool> GetFileFilterFix;
-		public static ConfigEntry<bool> FileOpOptimize;
-		private static Harmony _harmony;
+		public static ShortStartLoader Instance { get; private set; }
+		public static ManualLogSource PluginLogger => Instance.Logger;
+
+		public static ConfigEntry<bool> MultiThreadStartup { get; private set; }
+		public static ConfigEntry<bool> UseNewMethod { get; private set; }
+		public static ConfigEntry<bool> GetFileFilterFix { get; private set; }
+		public static ConfigEntry<bool> FileOpOptimize { get; private set; }
 
 		private void Awake()
 		{
-			PubLogger = Logger;
-
+			Instance = this;
+			MultiThreadStartup = Config.Bind("General", "Multi-thread startup", false, "Can increase initial load times of the game, but at the cost of stability. If you're getting crashes at game startup, disable this.");
 			UseNewMethod = Config.Bind("General", "Use New Method", true, "Uses a new method that further incorporates optimization from the built in WSQO. Confers a nice speed boost but stability is unsure.");
 			GetFileFilterFix = Config.Bind("General", "Fix GetFiles (Restart Required)", true, "Fixes an issue with GetFiles where using any search pattern would be significantly slower than fetching every file and filtering.");
 			FileOpOptimize = Config.Bind("General", "Optimize File Operations", true, "Same functionality as ModMenuAccel or WSQO. It speeds up various file operations that were slow and had room for improvement.");
 
-			_harmony = Harmony.CreateAndPatchAll(typeof(StartupOptimize));
+			var harmony = Harmony.CreateAndPatchAll(typeof(ShortStartLoader));
+
+			if (MultiThreadStartup.Value)
+			{
+				harmony.PatchAll(typeof(MultiThreadingFixes));
+				harmony.PatchAll(typeof(StartupOptimize));
+			}
 			if (FileOpOptimize.Value)
 			{
-				_harmony.PatchAll(typeof(FileOpOptimize));
+				harmony.PatchAll(typeof(FileOpOptimize));
 			}
-
 			if (GetFileFilterFix.Value)
 			{
-				_harmony.PatchAll(typeof(GetFilesFix));
+				harmony.PatchAll(typeof(GetFilesFix));
 			}
 		}
 	}

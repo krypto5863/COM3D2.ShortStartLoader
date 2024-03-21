@@ -19,7 +19,7 @@ namespace ShortStartLoader
 
 			__result = Directory.GetFiles(__0, "*", searchOption).Where(path => reg.IsMatch(Path.GetFileName(path))).ToArray();
 #if DEBUG
-			Main.PLogger.LogInfo($"Returning: {__result.Count()} files... Found with reg {reg} converted from wildcard {__1}.");
+			ShortStartLoader.PluginLogger.LogDebug($"Returning: {__result.Count()} files... Found with reg {reg} converted from wildcard {__1}.");
 #endif
 
 			return false;
