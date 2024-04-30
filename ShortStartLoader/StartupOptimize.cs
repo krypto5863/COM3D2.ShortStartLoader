@@ -5,54 +5,55 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection.Emit;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
+using Object = UnityEngine.Object;
 
 namespace ShortStartLoader
 {
 	public static class StartupOptimize
 	{
-		private static Task _legacyLoadTask;
-		private static Task _modLoadTask;
+		//private static Task _legacyLoadTask;
+		private static Task _backgroundLoadTask;
 		private static bool _normalArcLoaderDone;
 
+		
 		public static void WaitForLegacy()
 		{
 			_normalArcLoaderDone = true;
 
-			if (!_legacyLoadTask.IsCompleted)
+			if (!_backgroundLoadTask.IsCompleted)
 			{
-				var legacyStopWatch = new Stopwatch();
-				legacyStopWatch.Start();
+				//var backgroundStopWatch = new Stopwatch();
+				//backgroundStopWatch.Start();
 
-				Debug.Log("■■■■■■■■ Waiting for FileSystemOld to finish loading...");
+				//ShortStartLoader.PluginLogger.LogInfo("■■■■■■■■ Waiting for the background load thread to finish...");
 
-				while (!_legacyLoadTask.IsCompleted)
+				while (!_backgroundLoadTask.IsCompleted)
 				{
 				}
 
-				legacyStopWatch.Stop();
+				//backgroundStopWatch.Stop();
 
-				Debug.Log($"■■■■■■■■ FileSystemOld has finished loading: {legacyStopWatch.Elapsed}");
+				//ShortStartLoader.PluginLogger.LogInfo($"■■■■■■■■ Background load thread was awaited for: {backgroundStopWatch.Elapsed}");
 			}
 
-			if (_legacyLoadTask.IsFaulted)
+			if (_backgroundLoadTask.IsFaulted)
 			{
-				ShortStartLoader.PluginLogger.LogFatal("The legacy loader thread encountered a fatal error!");
+				ShortStartLoader.PluginLogger.LogFatal("The background load thread encountered a fatal error!");
 
-				if (_legacyLoadTask.Exception?.InnerException != null)
+				if (_backgroundLoadTask.Exception?.InnerException != null)
 				{
-					throw _legacyLoadTask.Exception.InnerException;
+					throw _backgroundLoadTask.Exception.InnerException;
 				}
 			}
 
-			_legacyLoadTask.Dispose();
-			_legacyLoadTask = null;
+			_backgroundLoadTask.Dispose();
+			_backgroundLoadTask = null;
 		}
 
-		[HarmonyPatch(typeof(GameUty), "Init")]
+		[HarmonyPatch(typeof(GameUty), nameof(GameUty.Init))]
 		[HarmonyTranspiler]
 		private static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> instructions)
 		{
@@ -60,45 +61,47 @@ namespace ShortStartLoader
 				.MatchForward(false,
 					new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(GameUty), "UpdateFileSystemPathOld"))
 				)
-				.Set(OpCodes.Call, AccessTools.Method(typeof(StartupOptimize), "WaitForLegacy"))
+				.Set(OpCodes.Call, AccessTools.Method(typeof(StartupOptimize), nameof(WaitForLegacy)))
 				.InstructionEnumeration();
 		}
-
-		[HarmonyPatch(typeof(GameUty), "Init")]
+		
+		/*
+		[HarmonyPatch(typeof(GameUty), nameof(GameUty.Init))]
 		[HarmonyPostfix]
 		private static void WaitForThread()
 		{
-			if (!_modLoadTask.IsCompleted)
+			if (!_backgroundLoadTask.IsCompleted)
 			{
 				var modStopWatch = new Stopwatch();
 				modStopWatch.Start();
 
-				Debug.Log("■■■■■■■■ Waiting for Mods to finish loading...");
+				ShortStartLoader.PluginLogger.LogInfo("■■■■■■■■ Waiting for Mods to finish loading...");
 
-				while (!_modLoadTask.IsCompleted)
+				while (!_backgroundLoadTask.IsCompleted)
 				{
 				}
 
 				modStopWatch.Stop();
 
-				Debug.Log($"■■■■■■■■ Mods have finished loading: {modStopWatch.Elapsed}");
+				ShortStartLoader.PluginLogger.LogInfo($"■■■■■■■■ Mods have finished loading: {modStopWatch.Elapsed}");
 			}
 
-			if (_modLoadTask.IsFaulted)
+			if (_backgroundLoadTask.IsFaulted)
 			{
 				ShortStartLoader.PluginLogger.LogFatal("The mod loader thread encountered a fatal error!");
 
-				if (_modLoadTask.Exception?.InnerException != null)
+				if (_backgroundLoadTask.Exception?.InnerException != null)
 				{
-					throw _modLoadTask.Exception.InnerException;
+					throw _backgroundLoadTask.Exception.InnerException;
 				}
 			}
 
-			_modLoadTask.Dispose();
-			_modLoadTask = null;
+			_backgroundLoadTask.Dispose();
+			_backgroundLoadTask = null;
 		}
+		*/
 
-		[HarmonyPatch(typeof(GameUty), "UpdateFileSystemPath")]
+		[HarmonyPatch(typeof(GameUty), nameof(GameUty.UpdateFileSystemPath))]
 		[HarmonyPrefix]
 		private static bool UpdateFileSystemPath()
 		{
@@ -215,24 +218,12 @@ namespace ShortStartLoader
 			//AddFolderOrArchive("product");
 			//Product.Initialize(GameUty.m_FileSystem);
 
-			_legacyLoadTask = Task.Factory.StartNew(delegate
-			{
-				var stopWatchLoc = new Stopwatch();
-				stopWatchLoc.Start();
-
-				ShortStartLoader.PluginLogger.LogInfo("■■■■■■■■ SSL's FileSystemOld Loading Thread has begun.");
-
-				GameUty.UpdateFileSystemPathOld();
-
-				ShortStartLoader.PluginLogger.LogInfo($"■■■■■■■■ SSL's FileSystemOld Loading Thread has finished in {stopWatchLoc.Elapsed}");
-			});
-
-			_modLoadTask = Task.Factory.StartNew(delegate
+			_backgroundLoadTask = Task.Factory.StartNew(delegate
 			{
 				var stopwatch1 = new Stopwatch();
 				stopwatch1.Start();
 
-				ShortStartLoader.PluginLogger.LogInfo("■■■■■■■■ SSL's Mod Loading Thread has begun...");
+				//ShortStartLoader.PluginLogger.LogInfo("■■■■■■■■ SSL's Mod Loading Thread has begun...");
 
 				if (Directory.Exists(gamePath + "Mod"))
 				{
@@ -254,33 +245,40 @@ namespace ShortStartLoader
 						}
 					}
 
-					if (ShortStartLoader.UseNewMethod.Value)
+					/* Modified original method. Commented and left for future reference or usage.
+					var listOfMenusInModFolder =
+						GameUty.m_ModFileSystem.GetList(string.Empty, AFileSystemBase.ListType.AllFile);
+					GameUty.m_aryModOnlysMenuFiles = listOfMenusInModFolder.Where(strFile => strFile.EndsWith(".menu", StringComparison.OrdinalIgnoreCase)).ToArray();
+					*/
+
+					GameUty.m_aryModOnlysMenuFiles = GameUty.m_ModFileSystem?.GetFileListAtExtension(".menu") ?? new string[0];
+					for (var r = 0; r < GameUty.m_aryModOnlysMenuFiles.Length; r++)
 					{
-						GameUty.m_aryModOnlysMenuFiles = GameUty.m_ModFileSystem.GetFileListAtExtension(".menu");
-						for (var r = 0; r < GameUty.m_aryModOnlysMenuFiles.Length; r++)
-						{
 #if DEBUG
-							ShortStartLoader.PluginLogger.LogDebug($"Getting file name of {GameUty.m_aryModOnlysMenuFiles[r]}");
+						ShortStartLoader.PluginLogger.LogDebug($"Getting file name of {GameUty.m_aryModOnlysMenuFiles[r]}");
 #endif
-							GameUty.m_aryModOnlysMenuFiles[r] = Path.GetFileName(GameUty.m_aryModOnlysMenuFiles[r]);
-						}
-					}
-					else
-					{
-						var listOfMenusInModFolder =
-								GameUty.m_ModFileSystem.GetList(string.Empty, AFileSystemBase.ListType.AllFile);
-
-						GameUty.m_aryModOnlysMenuFiles = listOfMenusInModFolder.Where(strFile => Regex.IsMatch(strFile, ".*\\.menu$")).ToArray();
+						GameUty.m_aryModOnlysMenuFiles[r] = Path.GetFileName(GameUty.m_aryModOnlysMenuFiles[r]);
 					}
 
-					if (GameUty.m_aryModOnlysMenuFiles.Length != 0)
+					if (GameUty.m_aryModOnlysMenuFiles?.Length != 0)
 					{
 						GameUty.ModPriorityToModFolderInfo = string.Empty;
 						Debug.Log(GameUty.ModPriorityToModFolderInfo + "■MOD有り。MODフォルダ優先モード" + GameUty.ModPriorityToModFolder);
 					}
 				}
 
-				ShortStartLoader.PluginLogger.LogInfo($"■■■■■■■■ SSL's Mod Load Thread has finished @ {stopwatch1.Elapsed}");
+				ShortStartLoader.PluginLogger.LogInfo($"■■■■■■■■ Done loading mods @ {stopwatch1.Elapsed}");
+			})
+				.ContinueWith(delegate
+			{
+				//var stopWatchLoc = new Stopwatch();
+				//stopWatchLoc.Start();
+
+				//ShortStartLoader.PluginLogger.LogInfo("■■■■■■■■ SSL's FileSystemOld Loading Thread has begun.");
+
+				GameUty.UpdateFileSystemPathOld();
+
+				//ShortStartLoader.PluginLogger.LogInfo($"■■■■■■■■ Done loading legacy arcs {stopWatchLoc.Elapsed}");
 			});
 
 			/* Informative, off for now.
@@ -358,7 +356,7 @@ namespace ShortStartLoader
 					AddFolderOrArchive("texture2", gameDataPath);
 					AddFolderOrArchive("texture3", gameDataPath);
 					AddFolderOrArchive("prioritymaterial", gameDataPath);
-					Debug.Log($"■■■■■■■■ Done Loading CM3D2 Arc Files @ {stopwatch.Elapsed}");
+					ShortStartLoader.PluginLogger.LogInfo($"■■■■■■■■ Done loading CM3D2 arc files @ {stopwatch.Elapsed}");
 				}
 
 				#endregion CM Load
@@ -413,7 +411,7 @@ namespace ShortStartLoader
 					GameUty.PathList = pathList;
 				}
 				GameUty.m_FileSystem.ClearPatchDecryptPreferredSearchDirectory();
-				Debug.Log($"■■■■■■■■ Done Loading Legacy Archives Installed to COM @ {stopwatch.Elapsed}");
+				ShortStartLoader.PluginLogger.LogInfo($"■■■■■■■■ Done loading legacy archives installed to COM @ {stopwatch.Elapsed}");
 
 				//UnityEngine.Debug.Log("■■■■■■■■ Archive Log[2.1] (GameData)");
 				gameDataPath = "GameData";
@@ -488,7 +486,7 @@ namespace ShortStartLoader
 				LoadAllArcOfPrefix2("parts");
 				AddFolderOrArchive("parts2", gameDataPath);
 
-				Debug.Log($"■■■■■■■■ Done Loading COM Arcs @ {stopwatch.Elapsed}");
+				ShortStartLoader.PluginLogger.LogInfo($"■■■■■■■■ Done loading arcs @ {stopwatch.Elapsed}");
 
 				#endregion CM Local Load
 			}
@@ -568,14 +566,12 @@ namespace ShortStartLoader
 				}
 			}
 
-			ShortStartLoader.PluginLogger.LogInfo($"\n■■■■■■■■ Done @ {stopwatch.Elapsed}");
-
-			//UnityEngine.Debug.Log("■■■■■■■■ Done!");
+			ShortStartLoader.PluginLogger.LogInfo($"■■■■■■■■ Nearly done @ {stopwatch.Elapsed}");
 
 			return false;
 		}
 
-		[HarmonyPatch(typeof(GameUty), "UpdateFileSystemPathOld")]
+		[HarmonyPatch(typeof(GameUty), nameof(GameUty.UpdateFileSystemPathOld))]
 		[HarmonyPrefix]
 		public static bool UpdateFileSystemPathOld()
 		{
@@ -591,7 +587,7 @@ namespace ShortStartLoader
 
 			stopwatch.Start();
 
-			ShortStartLoader.PluginLogger.LogInfo("■■■■■■■■ Archive Log[Legacy]");
+			//ShortStartLoader.PluginLogger.LogInfo("■■■■■■■■ Archive Log[Legacy]");
 
 			bool AddFolderOrArchive(string name)
 			{
@@ -704,7 +700,7 @@ namespace ShortStartLoader
 				}
 			}
 
-			ShortStartLoader.PluginLogger.LogInfo($"■■■■■■■■ Done Loading Legacy Files @ {stopwatch.Elapsed}");
+			ShortStartLoader.PluginLogger.LogInfo($"■■■■■■■■ Done loading legacy files @ {stopwatch.Elapsed}");
 			stopwatch.Stop();
 
 			return false;

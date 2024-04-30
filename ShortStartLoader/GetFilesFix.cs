@@ -6,7 +6,7 @@ namespace ShortStartLoader
 {
 	internal static class GetFilesFix
 	{
-		[HarmonyPatch(typeof(Directory), "GetFiles", typeof(string), typeof(string), typeof(SearchOption))]
+		[HarmonyPatch(typeof(Directory), nameof(Directory.GetFiles), typeof(string), typeof(string), typeof(SearchOption))]
 		[HarmonyPrefix]
 		public static bool DirGetFilesCache(ref string __0, ref string __1, ref SearchOption searchOption, ref string[] __result)
 		{

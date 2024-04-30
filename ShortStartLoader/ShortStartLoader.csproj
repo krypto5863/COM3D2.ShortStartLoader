@@ -85,7 +85,7 @@
   <ItemGroup>
     <Compile Include="GetFilesFix.cs" />
     <Compile Include="FileOpOptimize.cs" />
-    <Compile Include="MultiThreadingFixes.cs" />
+    <None Include="MultiThreadingFixes.cs" />
     <Compile Include="StartupOptimize.cs" />
     <Compile Include="WildcardToRegex.cs" />
     <Compile Include="ShortStartLoader.cs" />

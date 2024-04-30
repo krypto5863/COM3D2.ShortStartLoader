@@ -21,7 +21,7 @@ namespace ShortStartLoader
 		//Release handlers as it seems they remain open in the normal implementation causing a slow down.
 
 		//The original function has been deemed pretty much useless with the function of the above.
-		[HarmonyPatch(typeof(FileSystemArchive), "GetFileListAtExtension")]
+		[HarmonyPatch(typeof(FileSystemArchive), nameof(AFileSystemBase.GetFileListAtExtension))]
 		[HarmonyPrefix]
 		public static bool FileSystemArchiveGetFileListAtExtension(ref string[] __result, ref string __0)
 		{
@@ -40,7 +40,7 @@ namespace ShortStartLoader
 			return __result == null;
 		}
 
-		[HarmonyPatch(typeof(FileSystemWindows), "AddFolder")]
+		[HarmonyPatch(typeof(FileSystemWindows), nameof(FileSystemWindows.AddFolder))]
 		[HarmonyPostfix]
 		public static void FileSystemWindowsAddFolderPost(ref FileSystemWindows __instance) //inject at start; pass invoke
 		{
@@ -51,7 +51,7 @@ namespace ShortStartLoader
 			__instance.ReleaseAddAutoPathJob();
 		}
 
-		[HarmonyPatch(typeof(FileSystemWindows), "AddAutoPath")]
+		[HarmonyPatch(typeof(FileSystemWindows), nameof(FileSystemWindows.AddAutoPath))]
 		[HarmonyPrefix]
 		public static bool FileSystemWindowsAddAutoPath(ref bool __result) // inject at start; modify return
 		{
@@ -59,7 +59,7 @@ namespace ShortStartLoader
 			return false;
 		}
 
-		[HarmonyPatch(typeof(FileSystemWindows), "GetFileListAtExtension")]
+		[HarmonyPatch(typeof(FileSystemWindows), nameof(AFileSystemBase.GetFileListAtExtension))]
 		[HarmonyPrefix]
 		public static bool FileSystemWindowsGetFileListAtExtension(ref string[] __result, ref string __0) // inject at start; pass parameters; modify return
 		{
@@ -78,9 +78,9 @@ namespace ShortStartLoader
 			return false;
 		}
 
-		[HarmonyPatch(typeof(FileSystemWindows), "AddFolder")]
-		[HarmonyPatch(typeof(FileSystemWindows), "AddAutoPath")]
-		[HarmonyPatch(typeof(FileSystemWindows), "AddAutoPathForAllFolder")]
+		[HarmonyPatch(typeof(FileSystemWindows), nameof(FileSystemWindows.AddFolder))]
+		[HarmonyPatch(typeof(FileSystemWindows), nameof(FileSystemWindows.AddAutoPath))]
+		[HarmonyPatch(typeof(FileSystemWindows), nameof(FileSystemWindows.AddAutoPathForAllFolder))]
 		[HarmonyPrefix]
 		public static void ResetCache()
 		{
