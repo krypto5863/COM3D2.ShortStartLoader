@@ -218,6 +218,14 @@ namespace ShortStartLoader
 			//AddFolderOrArchive("product");
 			//Product.Initialize(GameUty.m_FileSystem);
 
+			ShortStartLoader.PluginLogger.LogInfo(
+				$"Product Type: {Product.type.ToString()}\n" +
+				$"Game Version: {GameUty.GetGameVersionText()}\n" +
+				$"Build Version: {GameUty.GetBuildVersionText()}\n" +
+				$"Is CM Linked: {GameUty.IsEnabledCompatibilityMode.ToString()}" +
+				(GameUty.IsEnabledCompatibilityMode ? $"\nCM Version: {GameUty.GetLegacyGameVersionText()}" : string.Empty)
+				);
+
 			_backgroundLoadTask = Task.Factory.StartNew(delegate
 			{
 				var stopwatch1 = new Stopwatch();
