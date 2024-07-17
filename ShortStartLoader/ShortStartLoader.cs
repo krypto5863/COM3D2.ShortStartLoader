@@ -10,7 +10,7 @@ using System.Security.Permissions;
 
 namespace ShortStartLoader
 {
-	[BepInPlugin("ShortStartLoader", "ShortStartLoader", "1.3.3")]
+	[BepInPlugin("ShortStartLoader", "ShortStartLoader", "1.3.4")]
 	[BepInDependency("BepInEx.SybarisLoader.Patcher", BepInDependency.DependencyFlags.SoftDependency)]
 	public class ShortStartLoader : BaseUnityPlugin
 	{
