@@ -10,7 +10,7 @@ To get technical, we optimize various calls by sorta juggling the slower parts o
 Please keep in mind this won't fix the massive delay you'll experience when starting the game, the crappy code is still unmanaged, this only helps somewhat especially when you have very large mod folders.
 
 ## Installation ##
-Make sure you're on at least assembly version 2.24 of the game before installing!
+Make sure you're on at least assembly version 2.38 of the game before installing!
 
 1. Download file from here: https://github.com/krypto5863/COM3D2.ShortStartLoader/releases under assets.
 2. Place into Bepinex/plugins
