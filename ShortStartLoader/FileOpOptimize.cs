@@ -66,7 +66,7 @@ namespace ShortStartLoader
 			if (_filePathInfoList == null)
 			{
 				_filePathInfoList = Directory.GetFiles(ModPath, "*", SearchOption.AllDirectories)
-					.Select(x => x.Replace(Paths.GameRootPath + "\\Mod\\", string.Empty).ToLower());
+					.Select(x => Path.GetFileName(x).ToLower());
 			}
 
 			var loc0 = __0;

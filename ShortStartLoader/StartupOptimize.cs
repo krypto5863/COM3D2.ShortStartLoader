@@ -260,13 +260,6 @@ namespace ShortStartLoader
 					*/
 
 					GameUty.m_aryModOnlysMenuFiles = GameUty.m_ModFileSystem?.GetFileListAtExtension(".menu") ?? new string[0];
-					for (var r = 0; r < GameUty.m_aryModOnlysMenuFiles.Length; r++)
-					{
-#if DEBUG
-						ShortStartLoader.PluginLogger.LogDebug($"Getting file name of {GameUty.m_aryModOnlysMenuFiles[r]}");
-#endif
-						GameUty.m_aryModOnlysMenuFiles[r] = Path.GetFileName(GameUty.m_aryModOnlysMenuFiles[r]);
-					}
 
 					if (GameUty.m_aryModOnlysMenuFiles?.Length != 0)
 					{
